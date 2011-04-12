@@ -52,34 +52,39 @@ s0.send(p1_question)
 #print 'p1 answer: ' + binascii.hexlify(p1_answer)
 
 #handshake part 3
-p0_question = binascii.unhexlify('78010439a913') + p22_answer + 'breadboyy' + chr(8)
+p0_question = binascii.unhexlify('78010439a912') + p1_question[2:] + 'breadboyy' + chr(8)
 print len(binascii.unhexlify('78010439a913')),len(p22_answer),len('breadboyy')
 print 'p0 question: ' + binascii.hexlify(p0_question)
 s0.send(p0_question)
-#p1_answer = s1.recv(1024)
-#print 'p1 answer: ' + binascii.hexlify(p1_answer)
+p1_answer = s1.recv(1024)
+print 'p1 answer: ' + binascii.hexlify(p1_answer)
 
 
 # remove first 35 bytes
-s0.recv(35)
+print 'discarding: ' + binascii.hexlify(s0.recv(35))
    
 print 'grabbing first 4k to test.stream'
 
 f = open('test.stream', 'w')
 mid='79040015a5'
-base=20
+base=32
 i=0
+b=0
 while True:
    stream = s0.recv(4096)
    #print binascii.hexlify(stream)
    i=i+1
-   print 'received', len(stream), 'bytes','cnt',i
+   
+   b=b+len(stream)
+   print 'received', b, 'bytes','cnt',i
    if(not stream):
       break
-   if(i==50):
-      base=base+1
-      x=binascii.unhexlify(mid+str(base))
+   if(i==25):
+      base=(base+1) % 256
+      b=0
+      x=binascii.unhexlify(mid)+chr(base)
       print 'send '+ binascii.hexlify(x)
       s0.send(x)
       i=0
    f.write(stream)
+
