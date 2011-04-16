@@ -70,21 +70,40 @@ mid='79040015a5'
 base=32
 i=0
 b=0
+junk = binascii.unhexlify('500000')
+more_junk = binascii.unhexlify('50010000')
 while True:
-   stream = s0.recv(4096)
-   #print binascii.hexlify(stream)
-   i=i+1
+    stream = s0.recv(4096)
+    #print binascii.hexlify(stream)
    
-   b=b+len(stream)
-   print 'received', b, 'bytes','cnt',i
-   if(not stream):
-      break
-   if(i==25):
-      base=(base+1) % 256
-      b=0
-      x=binascii.unhexlify(mid)+chr(base)
-      print 'send '+ binascii.hexlify(x)
-      s0.send(x)
-      i=0
-   f.write(stream)
+    pos = stream.find(junk)
+    if pos>-1:
+        rem = binascii.hexlify(stream[pos:pos+22])
+        if rem.endswith('ffffff'):
+            print 'removed: ' + rem + ' at: ' + str(pos)
+            stream = stream[:pos] + stream[pos+22:]
+    hits = stream.count(more_junk)
+    for hit in range(hits):       
+        pos = stream.find(more_junk)
+        print pos
+        if pos>-1:
+            rem = binascii.hexlify(stream[pos:pos+10])
+            #if stream[pos+10:pos+12] == binascii.unhexlify('3026'): #rem.endswith('04fb') or rem.endswith('04f7'):
+            print 'removed: ' + rem + ' at: ' + str(pos)
+            stream = stream[:pos] + stream[pos+10:]
+           
+    i=i+1
+   
+    b=b+len(stream)
+    print 'received', b, 'bytes','cnt',i
+    if(not stream):
+        break
+    if(i==25):
+        base=(base+1) % 256
+        b=0
+        x=binascii.unhexlify(mid)+chr(base)
+        print 'send '+ binascii.hexlify(x)
+        s0.send(x)
+        i=0
+    f.write(stream)
 
